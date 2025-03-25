@@ -16,3 +16,9 @@
 - Added new activity log entry.
 - Details: Working on aleo project, updated documentation.
 
+# Activity Log for Aleo
+
+## Update on 2025-03-25 20:24:09
+- Added new activity log entry.
+- Details: Working on aleo project, updated documentation.
+
