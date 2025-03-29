@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testway Explorer - Monad Testnet</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Ethers.js -->
+  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+  <!-- Particles.js -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000000;
+      color: #FFFFFF;
+      font-family: 'Roboto', sans-serif;
+      line-height: 1.6;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Particles Background */
+    #particles-js {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    /* Parallax Effect */
+    .parallax-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+      z-index: -2;
+      transform: translateZ(0);
+    }
+
+    /* Theme Styles */
+    body.light-mode {
+      background: #000000;
+      color: #FFFFFF;
+    }
+
+    body.light-mode header,
+    body.light-mode .block-info,
+    body.light-mode .address-info,
+    body.light-mode .wallet-info,
+    body.light-mode .token-portfolio,
+    body.light-mode .transaction-list,
+    body.light-mode .contract-verification,
+    body.light-mode .statistics,
+    body.light-mode .sidebar {
+      background: #000000;
+      border-image: linear-gradient(135deg, #00A3CC, #00D4FF) 1;
+    }
+
+    body.light-mode .transaction,
+    body.light-mode .token-item {
+      background: #000000;
+      border: 1px solid #00D4FF;
+    }
+
+    body.light-mode .search-bar input,
+    body.light-mode .filter-bar input,
+    body.light-mode .contract-verification input {
+      background: #000000;
+      color: #FFFFFF;
+      border: 1px solid #00D4FF;
+    }
+
+    /* Header */
+    header {
+      background: #000000;
+      padding: 10px 20px; /* Mempersempit header */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #00D4FF;
+      animation: fadeIn 1s ease-in;
+      position: relative;
+      z-index: 10;
+    }
+
+    header img {
+      height: 100px; /* Memperbesar logo */
+      filter: drop-shadow(0 0 15px #00D4FF);
+      border: 1px solid #00D4FF;
+      margin-right: 15px; /* Sesuaikan margin */
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        filter: drop-shadow(0 0 15px #00D4FF);
+      }
+      50% {
+        filter: drop-shadow(0 0 25px #00D4FF);
+      }
+      100% {
+        filter: drop-shadow(0 0 15px #00D4FF);
+      }
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 20px; /* Kurangi gap untuk menyesuaikan header yang lebih sempit */
+    }
+
+    .header-content nav {
+      display: flex;
+      gap: 15px; /* Kurangi gap antar menu */
+    }
+
+    .header-content nav a {
+      color: #00D4FF;
+      text-decoration: none;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem; /* Kurangi ukuran font menu */
+      transition: color 0.3s, text-shadow 0.3s;
+    }
+
+    .header-content nav a:hover {
+      color: #00A3CC;
+      text-shadow: 0 0 15px #00D4FF;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 10px; /* Kurangi gap antar tombol */
+    }
+
+    .header-buttons button {
+      padding: 6px 12px; /* Kurangi padding tombol */
+      background: transparent;
+      border: 1px solid #00D4FF;
+      border-radius: 5px;
+      color: #00D4FF;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 500;
+      font-size: 0.9rem; /* Kurangi ukuran font tombol */
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s, background 0.3s;
+      position: relative;
+    }
+
+    .header-buttons button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #00D4FF;
+      background: rgba(0, 212, 255, 0.1);
+    }
+
+    .header-buttons button::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #000000;
+      color: #00D4FF;
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: 1px solid #00D4FF;
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .header-buttons button:hover::after {
+      opacity: 1;
+    }
+
+    /* Search Bar */
+    .search-bar {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 20px;
+      animation: fadeIn 1.4s ease-in;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #00D4FF;
+      border-radius: 5px;
+      background: #000000;
+      color: #FFFFFF;
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+
+    .search-bar input::placeholder {
+      color: #888;
+    }
+
+    .search-bar input:focus {
+      outline: none;
+      border-color: #00A3CC;
+      box-shadow: 0 0 20px #00D4FF;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      max-width: 1200px;
+      margin: 10px auto;
+      padding: 0 20px;
+      display: flex;
+      gap: 10px;
+      animation: fadeIn 1.6s ease-in;
+      flex-wrap: wrap;
+    }
+
+    .filter-bar input,
+    .filter-bar select {
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #00D4FF;
+      border-radius: 5px;
+      background: #000000;
+      color: #FFFFFF;
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+
+    .filter-bar input::placeholder {
+      color: #888;
+    }
+
+    .filter-bar input:focus,
+    .filter-bar select:focus {
+      outline: none;
+      border-color: #00A3CC;
+      box-shadow: 0 0 20px #00D4FF;
+    }
+
+    .filter-bar button {
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid #00D4FF;
+      border-radius: 5px;
+      color: #00D4FF;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s, background 0.3s;
+    }
+
+    .filter-bar button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #00D4FF;
+      background: rgba(0, 212, 255, 0.1);
+    }
+
+    /* Settings Panel */
+    .settings-panel {
+      max-width: 1200px;
+      margin: 10px auto;
+      padding: 0 20px;
+      display: flex;
+      gap: 10px;
+      animation: fadeIn 1.8s ease-in;
+    }
+
+    .settings-panel label {
+      font-family: 'Roboto', sans-serif;
+      color: #00D4FF;
+    }
+
+    .settings-panel input[type="range"] {
+      width: 200px;
+    }
+
+    /* Main Layout */
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 20px;
+      display: flex;
+      gap: 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .main-section {
+      flex: 2;
+    }
+
+    .sidebar {
+      flex: 1;
+      background: #000000;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      border-image: linear-gradient(135deg, #00D4FF, #00A3CC) 1;
+      animation: fadeIn 2s ease-in;
+    }
+
+    /* Wallet Info */
+    .wallet-info {
+      background: #000000;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      border-image: linear-gradient(135deg, #00D4FF, #00A3CC) 1;
+      margin-bottom: 20px;
+      animation: fadeIn 2.2s ease-in;
+    }
+
+    .wallet-info h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: #00D4FF;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #00D4FF;
+    }
+
+    /* Block Info */
+    .block-info {
+      background: #000000;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid transparent;
+      border-image: linear-gradient(135deg, #00D4FF, #00A3CC) 1;
+      animation: fadeIn 2.4s ease-in;
+      position: relative;
+    }
+
+    .block-info h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: #00D4FF;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #00D4FF;
+    }
+
+    /* Loading Spinner */
+    .loading-spinner {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      border: 4px solid #00D4FF;
+      border-top: 4px solid transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* Address Info */
+    .address-info {
+      background: #000000;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      border-image: linear-gradient(135deg, #00D4FF, #00A3CC) 1;
+      margin-bottom: 20px;
+      display: none;
+      animation: fadeIn 2.6s ease-in;
+    }
+
+    .address-info h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: #00D4FF;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #00D4FF;
+    }
+
+    /* Token Portfolio */
+    .token-portfolio {
+      background: #000000;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      border-image: linear-gradient(135deg, #00D4FF, #00A3CC) 1;
+      margin-bottom: 20px;
+      animation: fadeIn 2.8s ease-in;
+    }
+
+    .token-portfolio h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: #00D4FF;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #00D4FF;
+    }
+
+    .token-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .token-item {
+      display: flex;
+      align-items: center;
+      background: #000000;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #00D4FF;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+
+    .token-item:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 20px #00D4FF;
+    }
+
+    .token-item .token-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .token-item .token-icon.mon {
+      background: linear-gradient(135deg, #00D4FF, #00A3CC);
+    }
+
+    .token-item .token-icon.stmon {
+      background: linear-gradient(135deg, #00A3CC, #007B99);
+    }
+
+    .token-item .token-icon.test {
+      background: linear-gradient(135deg, #00D4FF, #007B99);
+    }
+
+    .token-item p {
+      flex: 1;
+      font-size: 0.9rem;
+    }
+
+    /* Statistics Section */
+    .statistics {
+      background: #000000;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      border-image: linear-gradient(135deg, #00D4FF, #00A3CC) 1;
+      margin-bottom: 20px;
+      animation: fadeIn 3s ease-in;
+    }
+
+    .statistics h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: #00D4FF;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #00D4FF;
+    }
+
+    .statistics canvas {
+      max-width: 100%;
+    }
+
+    /* Transaction List */
+    .transaction-list {
+      background: #000000;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      border-image: linear-gradient(135deg, #00D4FF, #00A3CC) 1;
+      margin-bottom: 20px;
+      animation: fadeIn 3.2s ease-in;
+    }
+
+    .transaction-list h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: #00D4FF;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #00D4FF;
+    }
+
+    .transaction {
+      background: #000000;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #00D4FF;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s;
+      opacity: 0;
+      animation: fadeIn 0.5s ease-in forwards;
+    }
+
+    .transaction:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 20px #00D4FF;
+    }
+
+    .transaction p {
+      font-size: 0.9rem;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .pagination button {
+      padding: 8px 15px;
+      background: transparent;
+      border: 1px solid #00D4FF;
+      border-radius: 5px;
+      color: #00D4FF;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s, background 0.3s;
+    }
+
+    .pagination button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #00D4FF;
+      background: rgba(0, 212, 255, 0.1);
+    }
+
+    .pagination button:disabled {
+      border: 1px solid #555;
+      color: #555;
+      cursor: not-allowed;
+    }
+
+    /* Contract Verification */
+    .contract-verification {
+      background: #000000;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      border-image: linear-gradient(135deg, #00D4FF, #00A3CC) 1;
+      margin-bottom: 20px;
+      animation: fadeIn 3.4s ease-in;
+    }
+
+    .contract-verification h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: #00D4FF;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #00D4FF;
+    }
+
+    .contract-verification input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      font-size: 1rem;
+      border: 1px solid #00D4FF;
+      border-radius: 5px;
+      background: #000000;
+      color: #FFFFFF;
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+
+    .contract-verification input:focus {
+      outline: none;
+      border-color: #00A3CC;
+      box-shadow: 0 0 20px #00D4FF;
+    }
+
+    .contract-verification button {
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid #00D4FF;
+      border-radius: 5px;
+      color: #00D4FF;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s, background 0.3s;
+    }
+
+    .contract-verification button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #00D4FF;
+      background: rgba(0, 212, 255, 0.1);
+    }
+
+    .contract-verification pre {
+      background: #000000;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #00D4FF;
+      overflow-x: auto;
+      font-size: 0.9rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    /* Sidebar */
+    .sidebar h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: #00D4FF;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #00D4FF;
+    }
+
+    .sidebar p {
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+
+    /* API Button */
+    .api-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+    }
+
+    .api-button button {
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid #00D4FF;
+      border-radius: 5px;
+      color: #00D4FF;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s, background 0.3s;
+    }
+
+    .api-button button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #00D4FF;
+      background: rgba(0, 212, 255, 0.1);
+    }
+
+    /* Help Button */
+    .help-button {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+    }
+
+    .help-button button {
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid #00D4FF;
+      border-radius: 5px;
+      color: #00D4FF;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s, background 0.3s;
+    }
+
+    .help-button button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #00D4FF;
+      background: rgba(0, 212, 255, 0.1);
+    }
+
+    /* Help Modal */
+    .help-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .help-modal-content {
+      background: #000000;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #00D4FF;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .help-modal-content h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: #00D4FF;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px #00D4FF;
+    }
+
+    .help-modal-content p {
+      margin-bottom: 10px;
+    }
+
+    .help-modal-content button {
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid #00D4FF;
+      border-radius: 5px;
+      color: #00D4FF;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s, background 0.3s;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+
+    .help-modal-content button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #00D4FF;
+      background: rgba(0, 212, 255, 0.1);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #000000;
+      color: #00D4FF;
+      padding: 10px 20px;
+      border-radius: 5px;
+      border: 1px solid #00D4FF;
+      box-shadow: 0 0 10px #00D4FF;
+      opacity: 0;
+      transition: opacity 0.5s, transform 0.5s;
+      transform: translateY(-20px);
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes spin {
+      0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+      }
+      100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      header {
+        flex-direction: column;
+        gap: 10px;
+        padding: 8px 15px;
+      }
+
+      header img {
+        height: 50px; /* Sesuaikan tinggi logo untuk mobile */
+        margin-right: 0;
+      }
+
+      .header-content {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .header-content nav {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .header-content nav a {
+        font-size: 0.8rem;
+      }
+
+      .header-buttons {
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .header-buttons button {
+        width: 100%;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+
+      .filter-bar {
+        flex-direction: column;
+      }
+
+      .filter-bar input,
+      .filter-bar select,
+      .filter-bar button {
+        width: 100%;
+      }
+
+      .settings-panel {
+        flex-direction: column;
+      }
+    }
+
+    /* Accessibility */
+    button:focus,
+    input:focus,
+    select:focus {
+      outline: 2px solid #00D4FF;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Particles Background -->
+  <div id="particles-js"></div>
+  <div class="parallax-bg"></div>
+
+  <!-- Header -->
+  <header>
+    <!-- Logo -->
+    <img src="https://i.ibb.co.com/xKjFkjNC/logo.png" alt="Testway Explorer">
+    <!-- Menu dan Tombol -->
+    <div class="header-content">
+      <nav role="navigation">
+        <a href="#blockchain" aria-label="Blockchain section">Blockchain</a>
+        <a href="#tokens" aria-label="Tokens section">Tokens</a>
+        <a href="#nfts" aria-label="NFTs section">NFTs</a>
+        <a href="#statistics" aria-label="Statistics section">Statistics</a>
+        <a href="#ecosystem" aria-label="Ecosystem section">Ecosystem</a>
+      </nav>
+      <div class="header-buttons">
+        <button data-tooltip="Get testnet tokens" aria-label="Get testnet tokens">MON Faucet</button>
+        <button data-tooltip="Connect your wallet" aria-label="Connect your wallet" onclick="connectWallet()">Connect Wallet</button>
+        <button data-tooltip="Toggle theme" aria-label="Toggle theme" onclick="toggleTheme()">Toggle Theme</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Search Bar -->
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search by address, transaction, block, token, NFT..." aria-label="Search input">
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <input type="text" id="filterAddress" placeholder="Filter by address..." aria-label="Filter transactions by address">
+    <select id="filterType" aria-label="Filter transactions by type">
+      <option value="all">All Types</option>
+      <option value="transfer">Transfer</option>
+      <option value="contract">Contract Call</option>
+    </select>
+    <input type="date" id="filterDateStart" aria-label="Filter transactions by start date">
+    <input type="date" id="filterDateEnd" aria-label="Filter transactions by end date">
+    <select id="sortBy" aria-label="Sort transactions">
+      <option value="date-desc">Date (Newest First)</option>
+      <option value="date-asc">Date (Oldest First)</option>
+      <option value="gas-desc">Gas Price (High to Low)</option>
+      <option value="gas-asc">Gas Price (Low to High)</option>
+      <option value="value-desc">Value (High to Low)</option>
+      <option value="value-asc">Value (Low to High)</option>
+    </select>
+    <button onclick="filterTransactions()" aria-label="Apply filters">Filter</button>
+    <button onclick="updateBlockNumber()" aria-label="Refresh data">Refresh</button>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="settings-panel">
+    <label for="refreshInterval">Refresh Interval (seconds):</label>
+    <input type="range" id="refreshInterval" min="1" max="30" value="5" aria-label="Set refresh interval">
+    <span id="refreshValue">5</span>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container">
+    <!-- Main Section -->
+    <div class="main-section">
+      <!-- Wallet Info -->
+      <div class="wallet-info" id="walletInfo">
+        <h2>Wallet</h2>
+        <p id="walletAddress">Not connected</p>
+      </div>
+
+      <!-- Block Info -->
+      <div class="block-info">
+        <h2>Latest Block</h2>
+        <p id="blockNumber">Loading block number...</p>
+        <div class="loading-spinner" id="blockSpinner"></div>
+      </div>
+
+      <!-- Address Info -->
+      <div class="address-info" id="addressInfo">
+        <h2>Account Details</h2>
+        <p id="addressBalance">Balance: Loading...</p>
+        <p id="addressTxCount">Transaction Count: Loading...</p>
+      </div>
+
+      <!-- Token Portfolio -->
+      <div class="token-portfolio">
+        <h2>Token Portfolio</h2>
+        <div class="token-list" id="tokenList">
+          <!-- Simulated token data -->
+          <div class="token-item">
+            <div class="token-icon mon"></div>
+            <p>MON - 759,913</p>
+            <p>Contract: 0xb2f8a5c...</p>
+          </div>
+          <div class="token-item">
+            <div class="token-icon stmon"></div>
+            <p>stMON - 10</p>
+            <p>Contract: 0x19c2e7d...</p>
+          </div>
+          <div class="token-item">
+            <div class="token-icon test"></div>
+            <p>TEST - 1,000</p>
+            <p>Contract: 0xabc1234...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics -->
+      <div class="statistics">
+        <h2>Transaction Statistics</h2>
+        <canvas id="txVolumeChart"></canvas>
+      </div>
+
+      <!-- Transaction List -->
+      <div class="transaction-list">
+        <h2>Recent Transactions</h2>
+        <div id="transactions"></div>
+        <div class="pagination">
+          <button id="prevPage" onclick="changePage(-1)" disabled aria-label="Previous page">Previous</button>
+          <button id="nextPage" onclick="changePage(1)" aria-label="Next page">Next</button>
+        </div>
+      </div>
+
+      <!-- Contract Verification -->
+      <div class="contract-verification">
+        <h2>Verify Contract</h2>
+        <input type="text" id="contractAddress" placeholder="Enter contract address..." aria-label="Enter contract address">
+        <button onclick="verifyContract()" aria-label="Verify contract">Verify</button>
+        <p id="verificationResult">Enter a contract address to verify.</p>
+        <div id="contractSource" style="display: none;">
+          <h3>Contract Source Code</h3>
+          <pre id="sourceCode"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar for Transaction Details -->
+    <div class="sidebar">
+      <h2>Transaction Details</h2>
+      <div id="transactionDetails">
+        <p>Select a transaction to view details.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Button -->
+  <div class="api-button">
+    <button data-tooltip="Explore our API" aria-label="Try API">Try API</button>
+  </div>
+
+  <!-- Help Button -->
+  <div class="help-button">
+    <button onclick="openHelpModal()" aria-label="Open help modal">Help</button>
+  </div>
+
+  <!-- Help Modal -->
+  <div class="help-modal" id="helpModal">
+    <div class="help-modal-content">
+      <button onclick="closeHelpModal()" aria-label="Close help modal">Close</button>
+      <h2>Help & Instructions</h2>
+      <p>Welcome to Testway Explorer! Here are some tips to get started:</p>
+      <p>- Use the search bar to find addresses or transactions (Ctrl+K).</p>
+      <p>- Filter transactions by address, type, or date range in the filter bar.</p>
+      <p>- Sort transactions using the dropdown (e.g., by date or gas price).</p>
+      <p>- Adjust the refresh interval in the settings panel (default: 5 seconds).</p>
+      <p>- Verify contracts and view their source code in the Contract Verification section.</p>
+      <p>- Check transaction statistics in the Statistics section for visual insights.</p>
+      <p>- Use keyboard shortcuts: Ctrl+R to refresh, Ctrl+K to focus search.</p>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
+
+  <!-- JavaScript -->
+  <script>
+    // Particles.js Configuration
+    particlesJS("particles-js", {
+      particles: {
+        number: { value: 120, density: { enable: true, value_area: 800 } },
+        color: { value: ["#00D4FF", "#00A3CC", "#007B99"] },
+        shape: { type: "circle" },
+        opacity: { value: 0.6, random: true },
+        size: { value: 4, random: true },
+        line_linked: { enable: true, distance: 120, color: "#00D4FF", opacity: 0.3, width: 1 },
+        move: { enable: true, speed: 3, direction: "none", random: true, straight: false, out_mode: "out", bounce: false }
+      },
+      interactivity: {
+        detect_on: "canvas",
+        events: { onhover: { enable: true, mode: "repulse" }, onclick: { enable: true, mode: "push" }, resize: true },
+        modes: { repulse: { distance: 150, duration: 0.4 }, push: { particles_nb: 4 } }
+      },
+      retina_detect: true
+    });
+
+    const provider = new ethers.providers.JsonRpcProvider("https://testnet-rpc.monad.xyz");
+    const transactionsDiv = document.getElementById("transactions");
+    const transactionDetailsDiv = document.getElementById("transactionDetails");
+    const blockNumberDiv = document.getElementById("blockNumber");
+    const blockSpinner = document.getElementById("blockSpinner");
+    const searchInput = document.getElementById("searchInput");
+    const filterAddressInput = document.getElementById("filterAddress");
+    const filterTypeSelect = document.getElementById("filterType");
+    const filterDateStartInput = document.getElementById("filterDateStart");
+    const filterDateEndInput = document.getElementById("filterDateEnd");
+    const sortBySelect = document.getElementById("sortBy");
+    const addressInfoDiv = document.getElementById("addressInfo");
+    const addressBalanceDiv = document.getElementById("addressBalance");
+    const addressTxCountDiv = document.getElementById("addressTxCount");
+    const walletAddressDiv = document.getElementById("walletAddress");
+    const contractAddressInput = document.getElementById("contractAddress");
+    const verificationResultDiv = document.getElementById("verificationResult");
+    const contractSourceDiv = document.getElementById("contractSource");
+    const sourceCodePre = document.getElementById("sourceCode");
+    const prevPageButton = document.getElementById("prevPage");
+    const nextPageButton = document.getElementById("nextPage");
+    const toast = document.getElementById("toast");
+    const refreshIntervalInput = document.getElementById("refreshInterval");
+    const refreshValueSpan = document.getElementById("refreshValue");
+    const helpModal = document.getElementById("helpModal");
+
+    let currentPage = 1;
+    const transactionsPerPage = 5;
+    let latestBlockNumber = 0;
+    let allTransactions = [];
+    let filteredTransactions = [];
+    let transactionCache = new Map();
+    let blockCache = new Map();
+    let verifiedContracts = new Map();
+    let refreshInterval = 5000; // Default 5 seconds
+
+    // Chart.js Configuration
+    const txVolumeChart = new Chart(document.getElementById("txVolumeChart"), {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [{
+          label: "Transaction Volume",
+          data: [],
+          borderColor: "#00D4FF",
+          backgroundColor: "rgba(0, 212, 255, 0.2)",
+          fill: true,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: "Block Number", color: "#FFFFFF" } },
+          y: { title: { display: true, text: "Number of Transactions", color: "#FFFFFF" } }
+        },
+        plugins: {
+          legend: { labels: { color: "#FFFFFF" } }
+        }
+      }
+    });
+
+    // Function to show toast notification
+    function showToast(message) {
+      toast.innerText = message;
+      toast.classList.add("show");
+      playNotificationSound();
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+
+    // Function to update the latest block number
+    async function updateBlockNumber() {
+      blockSpinner.style.display = "block";
+      blockNumberDiv.innerText = "Loading block number...";
+      try {
+        latestBlockNumber = await provider.getBlockNumber();
+        blockNumberDiv.innerText = `Block Number: ${latestBlockNumber}`;
+        await fetchAllTransactions();
+        filteredTransactions = [...allTransactions];
+        renderTransactions();
+        updateChart();
+      } catch (error) {
+        blockNumberDiv.innerText = "Error fetching block number.";
+        console.error(error);
+        showToast("Failed to fetch block number. Click 'Refresh' to retry.");
+      } finally {
+        blockSpinner.style.display = "none";
+      }
+    }
+
+    // Function to fetch all transactions with caching
+    async function fetchAllTransactions() {
+      allTransactions = [];
+      for (let i = 0; i < 20; i++) {
+        const blockNumber = latestBlockNumber - i;
+        if (blockCache.has(blockNumber)) {
+          const block = blockCache.get(blockNumber);
+          allTransactions.push(...block.transactions);
+          continue;
+        }
+        try {
+          const block = await provider.getBlockWithTransactions(blockNumber);
+          blockCache.set(blockNumber, block);
+          if (block.transactions.length > 0) {
+            block.transactions.forEach(tx => {
+              transactionCache.set(tx.hash, tx);
+            });
+            allTransactions.push(...block.transactions);
+          }
+        } catch (error) {
+          console.error("Error fetching block:", error);
+        }
+      }
+    }
+
+    // Function to update chart data
+    function updateChart() {
+      const blockNumbers = [];
+      const txCounts = [];
+      for (let i = 0; i < 10; i++) {
+        const blockNumber = latestBlockNumber - i;
+        const block = blockCache.get(blockNumber);
+        if (block) {
+          blockNumbers.push(blockNumber);
+          txCounts.push(block.transactions.length);
+        }
+      }
+      txVolumeChart.data.labels = blockNumbers.reverse();
+      txVolumeChart.data.datasets[0].data = txCounts.reverse();
+      txVolumeChart.update();
+    }
+
+    // Function to render transactions with pagination
+    function renderTransactions() {
+      transactionsDiv.innerHTML = "";
+      const start = (currentPage - 1) * transactionsPerPage;
+      const end = start + transactionsPerPage;
+      const paginatedTransactions = filteredTransactions.slice(start, end);
+
+      paginatedTransactions.forEach((tx, index) => {
+        const txDiv = document.createElement("div");
+        txDiv.classList.add("transaction");
+        txDiv.style.animationDelay = `${index * 0.1}s`;
+        txDiv.innerHTML = `
+          <p>Tx Hash: ${tx.hash.slice(0, 10)}...${tx.hash.slice(-8)}</p>
+          <p>From: ${tx.from.slice(0, 10)}...</p>
+        `;
+        txDiv.addEventListener("click", () => {
+          showTransactionDetails(tx);
+          playClickSound();
+        });
+        transactionsDiv.appendChild(txDiv);
+      });
+
+      // Update pagination buttons
+      prevPageButton.disabled = currentPage === 1;
+      nextPageButton.disabled = end >= filteredTransactions.length;
+    }
+
+    // Function to change page
+    function changePage(direction) {
+      currentPage += direction;
+      renderTransactions();
+      playClickSound();
+    }
+
+    // Function to filter and sort transactions
+    function filterTransactions() {
+      const filterAddress = filterAddressInput.value.trim().toLowerCase();
+      const filterType = filterTypeSelect.value;
+      const filterDateStart = filterDateStartInput.value ? new Date(filterDateStartInput.value).getTime() / 1000 : null;
+      const filterDateEnd = filterDateEndInput.value ? new Date(filterDateEndInput.value).getTime() / 1000 : null;
+      const sortBy = sortBySelect.value;
+
+      // Filter transactions
+      filteredTransactions = allTransactions.filter(tx => {
+        let passAddress = true;
+        let passType = true;
+        let passDate = true;
+
+        // Filter by address
+        if (filterAddress) {
+          passAddress = (tx.from && tx.from.toLowerCase().includes(filterAddress)) ||
+                        (tx.to && tx.to.toLowerCase().includes(filterAddress));
+        }
+
+        // Filter by type (simulated)
+        if (filterType !== "all") {
+          passType = filterType === "transfer" ? !tx.to : tx.to && tx.data !== "0x";
+        }
+
+        // Filter by date
+        const block = Array.from(blockCache.values()).find(b => b.transactions.some(t => t.hash === tx.hash));
+        if (block) {
+          const txTimestamp = block.timestamp;
+          if (filterDateStart && txTimestamp < filterDateStart) passDate = false;
+          if (filterDateEnd && txTimestamp > filterDateEnd) passDate = false;
+        }
+
+        return passAddress && passType && passDate;
+      });
+
+      // Sort transactions
+      filteredTransactions.sort((a, b) => {
+        const blockA = Array.from(blockCache.values()).find(b => b.transactions.some(t => t.hash === a.hash));
+        const blockB = Array.from(blockCache.values()).find(b => b.transactions.some(t => t.hash === b.hash));
+        const timestampA = blockA ? blockA.timestamp : 0;
+        const timestampB = blockB ? blockB.timestamp : 0;
+
+        switch (sortBy) {
+          case "date-desc":
+            return timestampB - timestampA;
+          case "date-asc":
+            return timestampA - timestampB;
+          case "gas-desc":
+            return ethers.BigNumber.from(b.gasPrice).sub(ethers.BigNumber.from(a.gasPrice)).toNumber();
+          case "gas-asc":
+            return ethers.BigNumber.from(a.gasPrice).sub(ethers.BigNumber.from(b.gasPrice)).toNumber();
+          case "value-desc":
+            return ethers.BigNumber.from(b.value).sub(ethers.BigNumber.from(a.value)).toNumber();
+          case "value-asc":
+            return ethers.BigNumber.from(a.value).sub(ethers.BigNumber.from(b.value)).toNumber();
+          default:
+            return 0;
+        }
+      });
+
+      // Save filter settings
+      localStorage.setItem("filterAddress", filterAddress);
+      localStorage.setItem("filterType", filterType);
+      localStorage.setItem("filterDateStart", filterDateStartInput.value);
+      localStorage.setItem("filterDateEnd", filterDateEndInput.value);
+      localStorage.setItem("sortBy", sortBy);
+
+      currentPage = 1;
+      renderTransactions();
+      showToast(`Filtered ${filteredTransactions.length} transactions.`);
+      playClickSound();
+    }
+
+    // Function to show transaction details in the sidebar
+    async function showTransactionDetails(tx) {
+      let decodedData = "Not a contract call";
+      if (tx.to && tx.data !== "0x" && verifiedContracts.has(tx.to.toLowerCase())) {
+        const contractData = verifiedContracts.get(tx.to.toLowerCase());
+        const contract = new ethers.Contract(tx.to, contractData.abi, provider);
+        try {
+          const decoded = contract.interface.parseTransaction({ data: tx.data, value: tx.value });
+          if (decoded) {
+            decodedData = `Function: ${decoded.name}(${decoded.args.map((arg, i) => `arg${i}: ${arg}`).join(", ")})`;
+          }
+        } catch (error) {
+          console.error("Error decoding transaction:", error);
+          decodedData = "Error decoding transaction";
+        }
+      }
+
+      transactionDetailsDiv.innerHTML = `
+        <p><strong>Tx Hash:</strong> ${tx.hash}</p>
+        <p><strong>From:</strong> ${tx.from}</p>
+        <p><strong>To:</strong> ${tx.to || "Contract Creation"}</p>
+        <p><strong>Value:</strong> ${ethers.utils.formatEther(tx.value)} ETH</p>
+        <p><strong>Gas Price:</strong> ${ethers.utils.formatUnits(tx.gasPrice, "gwei")} Gwei</p>
+        <p><strong>Decoded Data:</strong> ${decodedData}</p>
+      `;
+    }
+
+    // Function to search address or transaction
+    async function search() {
+      const query = searchInput.value.trim();
+      if (!query) return;
+
+      // Check if the query is a valid address
+      if (ethers.utils.isAddress(query)) {
+        try {
+          addressInfoDiv.style.display = "block";
+          const balance = await provider.getBalance(query);
+          const txCount = await provider.getTransactionCount(query);
+          addressBalanceDiv.innerText = `Balance: ${ethers.utils.formatEther(balance)} ETH`;
+          addressTxCountDiv.innerText = `Transaction Count: ${txCount}`;
+          showToast("Address details loaded.");
+        } catch (error) {
+          addressInfoDiv.style.display = "block";
+          addressBalanceDiv.innerText = "Error fetching balance.";
+          addressTxCountDiv.innerText = "";
+          console.error(error);
+          showToast("Failed to fetch address details.");
+        }
+      } else {
+        // Assume it's a transaction hash
+        try {
+          const tx = transactionCache.get(query) || await provider.getTransaction(query);
+          if (tx) {
+            showTransactionDetails(tx);
+            addressInfoDiv.style.display = "none";
+            showToast("Transaction details loaded.");
+          } else {
+            transactionDetailsDiv.innerHTML = "<p>Transaction not found.</p>";
+            addressInfoDiv.style.display = "none";
+            showToast("Transaction not found.");
+          }
+        } catch (error) {
+          transactionDetailsDiv.innerHTML = "<p>Error fetching transaction.</p>";
+          addressInfoDiv.style.display = "none";
+          console.error(error);
+          showToast("Failed to fetch transaction.");
+        }
+      }
+      playClickSound();
+    }
+
+    // Function to verify contract using Sourcify
+    async function verifyContract() {
+      const contractAddress = contractAddressInput.value.trim();
+      if (!ethers.utils.isAddress(contractAddress)) {
+        verificationResultDiv.innerText = "Invalid contract address.";
+        showToast("Invalid contract address.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`https://sourcify-api-monad.blockvision.org/verify`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            address: contractAddress,
+            chainId: "10143", // Monad Testnet Chain ID
+          }),
+        });
+
+        const result = await response.json();
+        if (result.status === "verified") {
+          verificationResultDiv.innerText = "Contract verified successfully!";
+          contractSourceDiv.style.display = "block";
+          sourceCodePre.innerText = result.sourceCode || "Source code not available.";
+          verifiedContracts.set(contractAddress.toLowerCase(), {
+            abi: result.abi,
+            sourceCode: result.sourceCode
+          });
+          showToast("Contract verified successfully!");
+        } else {
+          verificationResultDiv.innerText = "Contract not verified. It may not be in Sourcify.";
+          contractSourceDiv.style.display = "none";
+          showToast("Contract not verified.");
+        }
+      } catch (error) {
+        verificationResultDiv.innerText = "Error verifying contract.";
+        contractSourceDiv.style.display = "none";
+        console.error(error);
+        showToast("Error verifying contract.");
+      }
+      playClickSound();
+    }
+
+    // Function to simulate wallet connection
+    function connectWallet() {
+      const dummyAddress = "0x1234567890abcdef1234567890abcdef12345678";
+      walletAddressDiv.innerText = `Connected: ${dummyAddress.slice(0, 10)}...${dummyAddress.slice(-8)}`;
+      showToast("Wallet connected (simulated).");
+      playClickSound();
+    }
+
+    // Function to toggle theme
+    function toggleTheme() {
+      document.body.classList.toggle("light-mode");
+      showToast("Theme toggled.");
+      playClickSound();
+    }
+
+    // Function to open help modal
+    function openHelpModal() {
+      helpModal.style.display = "flex";
+      playClickSound();
+    }
+
+    // Function to close help modal
+    function closeHelpModal() {
+      helpModal.style.display = "none";
+      playClickSound();
+    }
+
+    // Function to play click sound
+    function playClickSound() {
+      const sound = new Audio("https://www.soundjay.com/buttons/button-3.mp3");
+      sound.play().catch((error) => console.log("Sound playback failed:", error));
+    }
+
+    // Function to play notification sound
+    function playNotificationSound() {
+      const sound = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
+      sound.play().catch((error) => console.log("Sound playback failed:", error));
+    }
+
+    // Function to update refresh interval
+    function updateRefreshInterval() {
+      refreshInterval = parseInt(refreshIntervalInput.value) * 1000;
+      refreshValueSpan.innerText = refreshInterval / 1000;
+      clearInterval(autoRefresh);
+      autoRefresh = setInterval(updateBlockNumber, refreshInterval);
+      showToast(`Refresh interval set to ${refreshInterval / 1000} seconds.`);
+    }
+
+    // Event listeners
+    searchInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        search();
+      }
+    });
+
+    filterAddressInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        filterTransactions();
+      }
+    });
+
+    filterTypeSelect.addEventListener("change", filterTransactions);
+    filterDateStartInput.addEventListener("change", filterTransactions);
+    filterDateEndInput.addEventListener("change", filterTransactions);
+    sortBySelect.addEventListener("change", filterTransactions);
+
+    refreshIntervalInput.addEventListener("input", updateRefreshInterval);
+
+    // Keyboard shortcuts
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && e.key === "k") {
+        e.preventDefault();
+        searchInput.focus();
+        playClickSound();
+      }
+      if (e.ctrlKey && e.key === "r") {
+        e.preventDefault();
+        updateBlockNumber();
+      }
+    });
+
+    // Load saved filter settings
+    filterAddressInput.value = localStorage.getItem("filterAddress") || "";
+    filterTypeSelect.value = localStorage.getItem("filterType") || "all";
+    filterDateStartInput.value = localStorage.getItem("filterDateStart") || "";
+    filterDateEndInput.value = localStorage.getItem("filterDateEnd") || "";
+    sortBySelect.value = localStorage.getItem("sortBy") || "date-desc";
+
+    // Initial call to update block number
+    updateBlockNumber();
+
+    // Auto-refresh with customizable interval
+    let autoRefresh = setInterval(updateBlockNumber, refreshInterval);
+  </script>
+</body>
+</html>

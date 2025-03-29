@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IBC Explorer - Cross-Chain Interoperability</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <!-- CDN untuk @cosmjs/stargate dan @cosmjs/proto-signing -->
+  <script src="https://unpkg.com/@cosmjs/stargate@0.31.0/build/stargate.umd.js"></script>
+  <script src="https://unpkg.com/@cosmjs/proto-signing@0.31.0/build/protosigning.umd.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000000; color: #FFFFFF; font-family: 'Roboto', sans-serif; line-height: 1.6; position: relative; overflow-x: hidden; }
+    #particles-js { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+    .parallax-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%); z-index: -2; transform: translateZ(0); }
+    body.light-mode { background: #000000; color: #FFFFFF; }
+    body.light-mode header, body.light-mode .channels, body.light-mode .transactions, body.light-mode .statistics, body.light-mode .sidebar { background: #000000; border-image: linear-gradient(135deg, #00A3CC, #00D4FF) 1; }
+    body.light-mode .channel, body.light-mode .transaction { background: #000000; border: 1px solid #00D4FF; }
+    body.light-mode .search-bar input { background: #000000; color: #FFFFFF; border: 1px solid #00D4FF; }
+    header { background: #000000; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00D4FF; animation: fadeIn 1s ease-in; position: relative; z-index: 10; }
+    .logo-container { display: flex; align-items: center; gap: 10px; }
+    header img.main-logo { height: 100px; filter: drop-shadow(0 0 15px #00D4FF);animation: pulse 2s infinite; }
+    .social-links { display: flex; gap: 8px; }
+    .social-links a { display: inline-block; }
+    .social-links img { height: 30px; transition: transform 0.2s, filter 0.3s; }
+    .social-links img:hover { transform: scale(1.1); filter: drop-shadow(0 0 10px #FFFFFF); }
+    @keyframes pulse { 0% { filter: drop-shadow(0 0 15px #00D4FF); } 50% { filter: drop-shadow(0 0 25px #00D4FF); } 100% { filter: drop-shadow(0 0 15px #00D4FF); } }
+    .header-content { display: flex; align-items: center; gap: 20px; }
+    .header-content nav { display: flex; gap: 15px; }
+    .header-content nav a { color: #00D4FF; text-decoration: none; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; transition: color 0.3s, text-shadow 0.3s; }
+    .header-content nav a:hover { color: #00A3CC; text-shadow: 0 0 15px #00D4FF; }
+    .header-buttons { display: flex; gap: 10px; }
+    .header-buttons button { padding: 6px 12px; background: transparent; border: 1px solid #00D4FF; border-radius: 5px; color: #00D4FF; font-family: 'Roboto', sans-serif; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.3s, background 0.3s; position: relative; }
+    .header-buttons button:hover { transform: scale(1.05); box-shadow: 0 0 20px #00D4FF; background: rgba(0, 212, 255, 0.1); }
+    .header-buttons button::after { content: attr(data-tooltip); position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: #000000; color: #00D4FF; padding: 5px 10px; border-radius: 5px; border: 1px solid #00D4FF; font-size: 0.8rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .header-buttons button:hover::after { opacity: 1; }
+    .search-bar { max-width: 1200px; margin: 20px auto; padding: 0 20px; animation: fadeIn 1.4s ease-in; }
+    .search-bar input { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #00D4FF; border-radius: 5px; background: #000000; color: #FFFFFF; transition: box-shadow 0.3s, border-color 0.3s; }
+    .search-bar input::placeholder { color: #888; }
+    .search-bar input:focus { outline: none; border-color: #00A3CC; box-shadow: 0 0 20px #00D4FF; }
+    .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; display: flex; gap: 20px; position: relative; z-index: 10; }
+    .main-section { flex: 2; }
+    .sidebar { flex: 1; background: #000000; padding: 20px; border-radius: 8px; border: 1px solid transparent; border-image: linear-gradient(135deg, #00D4FF, #00A3CC) 1; animation: fadeIn 2s ease-in; }
+    .channels { background: #000000; padding: 20px; border-radius: 8px; border: 1px solid transparent; border-image: linear-gradient(135deg, #00D4FF, #00A3CC) 1; margin-bottom: 20px; animation: fadeIn 2.2s ease-in; }
+    .channels h2 { font-family: 'Orbitron', sans-serif; color: #00D4FF; margin-bottom: 10px; text-shadow: 0 0 10px #00D4FF; }
+    .channel { background: #000000; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #00D4FF; cursor: pointer; transition: transform 0.2s, box-shadow 0.3s; opacity: 0; animation: fadeIn 0.5s ease-in forwards; }
+    .channel:hover { transform: scale(1.02); box-shadow: 0 0 20px #00D4FF; }
+    .channel p { font-size: 0.9rem; }
+    .transactions { background: #000000; padding: 20px; border-radius: 8px; border: 1px solid transparent; border-image: linear-gradient(135deg, #00D4FF, #00A3CC) 1; margin-bottom: 20px; animation: fadeIn 2.4s ease-in; }
+    .transactions h2 { font-family: 'Orbitron', sans-serif; color: #00D4FF; margin-bottom: 10px; text-shadow: 0 0 10px #00D4FF; }
+    .transaction { background: #000000; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #00D4FF; cursor: pointer; transition: transform 0.2s, box-shadow 0.3s; opacity: 0; animation: fadeIn 0.5s ease-in forwards; }
+    .transaction:hover { transform: scale(1.02); box-shadow: 0 0 20px #00D4FF; }
+    .transaction p { font-size: 0.9rem; }
+    .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+    .pagination button { padding: 8px 15px; background: transparent; border: 1px solid #00D4FF; border-radius: 5px; color: #00D4FF; font-family: 'Roboto', sans-serif; font-weight: 500; cursor: pointer; transition: transform 0.2s, box-shadow 0.3s, background 0.3s; }
+    .pagination button:hover { transform: scale(1.05); box-shadow: 0 0 20px #00D4FF; background: rgba(0, 212, 255, 0.1); }
+    .pagination button:disabled { border: 1px solid #555; color: #555; cursor: not-allowed; }
+    .statistics { background: #000000; padding: 20px; border-radius: 8px; border: 1px solid transparent; border-image: linear-gradient(135deg, #00D4FF, #00A3CC) 1; margin-bottom: 20px; animation: fadeIn 2.6s ease-in; }
+    .statistics h2 { font-family: 'Orbitron', sans-serif; color: #00D4FF; margin-bottom: 10px; text-shadow: 0 0 10px #00D4FF; }
+    .statistics canvas { max-width: 100%; }
+    .sidebar h2 { font-family: 'Orbitron', sans-serif; color: #00D4FF; margin-bottom: 10px; text-shadow: 0 0 10px #00D4FF; }
+    .sidebar p { font-size: 0.9rem; margin-bottom: 10px; }
+    .toast { position: fixed; top: 20px; right: 20px; background: #000000; color: #00D4FF; padding: 10px 20px; border-radius: 5px; border: 1px solid #00D4FF; box-shadow: 0 0 10px #00D4FF; opacity: 0; transition: opacity 0.5s, transform 0.5s; transform: translateY(-20px); z-index: 1000; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 768px) {
+      .container { flex-direction: column; }
+      header { flex-direction: column; gap: 10px; padding: 8px 15px; }
+      .logo-container { flex-direction: column; align-items: center; gap: 5px; }
+      header img.main-logo { height: 50px; }
+      .social-links img { height: 20px; }
+      .header-content { flex-direction: column; gap: 10px; }
+      .header-content nav { flex-direction: column; gap: 8px; }
+      .header-content nav a { font-size: 0.8rem; }
+      .header-buttons { flex-direction: column; gap: 8px; width: 100%; }
+      .header-buttons button { width: 100%; padding: 6px 12px; font-size: 0.8rem; }
+    }
+    button:focus, input:focus { outline: 2px solid #00D4FF; outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <div id="particles-js"></div>
+  <div class="parallax-bg"></div>
+  <header>
+    <div class="logo-container">
+      <img src="https://i.ibb.co.com/xKjFkjNC/logo.png" alt="IBC Explorer" class="main-logo">
+      <div class="social-links">
+        <a href="https://github.com/TestwayWeb3" target="_blank" aria-label="GitHub">
+          <img src="https://i.ibb.co.com/wrBqqcxH/github.png" alt="GitHub">
+        </a>
+        <a href="https://x.com/TestwayWeb3" target="_blank" aria-label="X">
+          <img src="https://i.ibb.co.com/JFbGQbvw/X.png" alt="X">
+        </a>
+      </div>
+    </div>
+    <div class="header-content">
+      <nav role="navigation">
+        <a href="#home" aria-label="Home section">Home</a>
+        <a href="#channels" aria-label="Channels section">Channels</a>
+        <a href="#transactions" aria-label="Transactions section">Transactions</a>
+        <a href="#statistics" aria-label="Statistics section">Statistics</a>
+      </nav>
+      <div class="header-buttons">
+        <button data-tooltip="Connect your wallet" aria-label="Connect your wallet" onclick="connectWallet()">Connect Wallet</button>
+        <button data-tooltip="Toggle theme" aria-label="Toggle theme" onclick="toggleTheme()">Toggle Theme</button>
+      </div>
+    </div>
+  </header>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search by transaction, channel, or address..." aria-label="Search input">
+  </div>
+  <div class="container">
+    <div class="main-section">
+      <div class="channels">
+        <h2>IBC Channels</h2>
+        <div id="channelsList">
+          <p>Loading channels...</p>
+        </div>
+      </div>
+      <div class="transactions">
+        <h2>Recent Cross-Chain Transactions (ICS-20)</h2>
+        <div id="transactionsList">
+          <p>Loading transactions...</p>
+        </div>
+        <div class="pagination">
+          <button id="prevPage" onclick="changePage(-1)" disabled aria-label="Previous page">Previous</button>
+          <button id="nextPage" onclick="changePage(1)" aria-label="Next page">Next</button>
+        </div>
+      </div>
+      <div class="statistics">
+        <h2>IBC Transaction Volume</h2>
+        <canvas id="txVolumeChart"></canvas>
+      </div>
+    </div>
+    <div class="sidebar">
+      <h2>Details</h2>
+      <div id="details">
+        <p>Select a channel or transaction to view details.</p>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script>
+    particlesJS("particles-js", {
+      particles: {
+        number: { value: 120, density: { enable: true, value_area: 800 } },
+        color: { value: ["#00D4FF", "#00A3CC", "#007B99"] },
+        shape: { type: "circle" },
+        opacity: { value: 0.6, random: true },
+        size: { value: 4, random: true },
+        line_linked: { enable: true, distance: 120, color: "#00D4FF", opacity: 0.3, width: 1 },
+        move: { enable: true, speed: 3, direction: "none", random: true, straight: false, out_mode: "out", bounce: false }
+      },
+      interactivity: {
+        detect_on: "canvas",
+        events: { onhover: { enable: true, mode: "repulse" }, onclick: { enable: true, mode: "push" }, resize: true },
+        modes: { repulse: { distance: 150, duration: 0.4 }, push: { particles_nb: 4 } }
+      },
+      retina_detect: true
+    });
+
+    const { StargateClient } = window.cosmjs.stargate;
+    const searchInput = document.getElementById("searchInput");
+    const channelsList = document.getElementById("channelsList");
+    const transactionsList = document.getElementById("transactionsList");
+    const detailsDiv = document.getElementById("details");
+    const prevPageButton = document.getElementById("prevPage");
+    const nextPageButton = document.getElementById("nextPage");
+    const toast = document.getElementById("toast");
+
+    let currentPage = 1;
+    const transactionsPerPage = 5;
+    let allTransactions = [];
+    let filteredTransactions = [];
+    let allChannels = [];
+    const channelCache = new Map();
+    const transactionCache = new Map();
+
+    const txVolumeChart = new Chart(document.getElementById("txVolumeChart"), {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [{
+          label: "Transaction Volume",
+          data: [],
+          borderColor: "#00D4FF",
+          backgroundColor: "rgba(0, 212, 255, 0.2)",
+          fill: true,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: "Block Height", color: "#FFFFFF" } },
+          y: { title: { display: true, text: "Number of Transactions", color: "#FFFFFF" } }
+        },
+        plugins: {
+          legend: { labels: { color: "#FFFFFF" } }
+        }
+      }
+    });
+
+    function showToast(message) {
+      toast.innerText = message;
+      toast.classList.add("show");
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+
+    async function fetchIBCChannels() {
+      if (channelCache.size > 0) {
+        allChannels = Array.from(channelCache.values());
+        renderChannels();
+        return;
+      }
+
+      try {
+        const response = await fetch("https://rpc-theta-testnet.polypore.xyz/ibc/core/channel/v1/channels");
+        const data = await response.json();
+        allChannels = data.channels || [];
+        allChannels.forEach(channel => {
+          channelCache.set(channel.channel_id, channel);
+          // Simulasi jumlah transaksi untuk channel (karena endpoint tidak tersedia)
+          channel.transactionCount = Math.floor(Math.random() * 100); // Placeholder
+        });
+        renderChannels();
+      } catch (error) {
+        console.error("Error fetching channels:", error);
+        channelsList.innerHTML = "<p>Error loading channels.</p>";
+        showToast("Failed to fetch IBC channels.");
+      }
+    }
+
+    async function fetchTransactions() {
+      if (transactionCache.size > 0) {
+        allTransactions = Array.from(transactionCache.values());
+        filteredTransactions = allTransactions.filter(tx => tx.isICS20);
+        renderTransactions();
+        updateChart();
+        return;
+      }
+
+      try {
+        const response = await fetch("https://rpc-theta-testnet.polypore.xyz/txs?events=message.module=ibc_channel");
+        const data = await response.json();
+        const txs = data.txs || [];
+
+        allTransactions = [];
+        txs.forEach(tx => {
+          const isICS20 = tx.logs?.some(log =>
+            log.events?.some(event =>
+              event.type === "fungible_token_packet"
+            )
+          );
+
+          if (isICS20) {
+            const event = tx.logs
+              .flatMap(log => log.events)
+              .find(event => event.type === "fungible_token_packet");
+
+            const attributes = event?.attributes || [];
+            const sender = attributes.find(attr => attr.key === "sender")?.value || "Unknown";
+            const receiver = attributes.find(attr => attr.key === "receiver")?.value || "Unknown";
+            const amount = attributes.find(attr => attr.key === "amount")?.value || "0";
+            const denom = attributes.find(attr => attr.key === "denom")?.value || "Unknown";
+
+            const txData = {
+              hash: tx.txhash,
+              from: sender,
+              to: receiver,
+              amount: amount,
+              denom: denom,
+              height: parseInt(tx.height),
+              isICS20: true
+            };
+
+            allTransactions.push(txData);
+            transactionCache.set(tx.txhash, txData);
+          }
+        });
+
+        filteredTransactions = allTransactions.filter(tx => tx.isICS20);
+        renderTransactions();
+        updateChart();
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+        transactionsList.innerHTML = "<p>Error loading transactions.</p>";
+        showToast("Failed to fetch transactions.");
+      }
+    }
+
+    function renderChannels() {
+      channelsList.innerHTML = "";
+      allChannels.slice(0, 5).forEach((channel, index) => {
+        const channelDiv = document.createElement("div");
+        channelDiv.classList.add("channel");
+        channelDiv.style.animationDelay = `${index * 0.1}s`;
+        channelDiv.innerHTML = `
+          <p>Channel ID: ${channel.channel_id}</p>
+          <p>Port: ${channel.port_id}</p>
+          <p>Counterparty: ${channel.counterparty?.channel_id || "Unknown"}</p>
+          <p>Transactions: ${channel.transactionCount}</p>
+        `;
+        channelDiv.addEventListener("click", () => {
+          showDetails({
+            id: channel.channel_id,
+            port: channel.port_id,
+            counterparty: channel.counterparty?.channel_id || "Unknown",
+            transactionCount: channel.transactionCount
+          });
+        });
+        channelsList.appendChild(channelDiv);
+      });
+    }
+
+    function renderTransactions() {
+      transactionsList.innerHTML = "";
+      const start = (currentPage - 1) * transactionsPerPage;
+      const end = start + transactionsPerPage;
+      const paginatedTransactions = filteredTransactions.slice(start, end);
+
+      paginatedTransactions.forEach((tx, index) => {
+        const txDiv = document.createElement("div");
+        txDiv.classList.add("transaction");
+        txDiv.style.animationDelay = `${index * 0.1}s`;
+        txDiv.innerHTML = `
+          <p>Tx Hash: ${tx.hash.slice(0, 10)}...</p>
+          <p>From: ${tx.from.slice(0, 10)}...</p>
+          <p>To: ${tx.to.slice(0, 10)}...</p>
+          <p>Amount: ${tx.amount} ${tx.denom}</p>
+        `;
+        txDiv.addEventListener("click", () => {
+          showDetails(tx);
+        });
+        transactionsList.appendChild(txDiv);
+      });
+
+      prevPageButton.disabled = currentPage === 1;
+      nextPageButton.disabled = end >= filteredTransactions.length;
+    }
+
+    function updateChart() {
+      const blockHeights = [];
+      const txCounts = [];
+      const blockMap = new Map();
+
+      filteredTransactions.forEach(tx => {
+        blockMap.set(tx.height, (blockMap.get(tx.height) || 0) + 1);
+      });
+
+      for (let i = 0; i < 5; i++) {
+        const height = Math.max(...filteredTransactions.map(tx => tx.height)) - i;
+        blockHeights.push(height);
+        txCounts.push(blockMap.get(height) || 0);
+      }
+
+      txVolumeChart.data.labels = blockHeights.reverse();
+      txVolumeChart.data.datasets[0].data = txCounts.reverse();
+      txVolumeChart.update();
+    }
+
+    function changePage(direction) {
+      currentPage += direction;
+      renderTransactions();
+    }
+
+    function showDetails(item) {
+      if (item.hash) {
+        detailsDiv.innerHTML = `
+          <p><strong>Tx Hash:</strong> ${item.hash}</p>
+          <p><strong>From:</strong> ${item.from}</p>
+          <p><strong>To:</strong> ${item.to}</p>
+          <p><strong>Amount:</strong> ${item.amount} ${item.denom}</p>
+          <p><strong>Block Height:</strong> ${item.height}</p>
+        `;
+      } else {
+        detailsDiv.innerHTML = `
+          <p><strong>Channel ID:</strong> ${item.id}</p>
+          <p><strong>Port:</strong> ${item.port}</p>
+          <p><strong>Counterparty:</strong> ${item.counterparty}</p>
+          <p><strong>Transactions:</strong> ${item.transactionCount}</p>
+        `;
+      }
+      showToast("Details loaded.");
+    }
+
+    function search() {
+      const query = searchInput.value.trim().toLowerCase();
+      if (!query) return;
+
+      filteredTransactions = allTransactions.filter(tx =>
+        tx.hash.toLowerCase().includes(query) ||
+        tx.from.toLowerCase().includes(query) ||
+        tx.to.toLowerCase().includes(query)
+      );
+
+      currentPage = 1;
+      renderTransactions();
+      showToast(`Found ${filteredTransactions.length} transactions.`);
+    }
+
+    async function connectWallet() {
+      try {
+        if (!window.keplr) {
+          showToast("Please install Keplr Wallet.");
+          return;
+        }
+
+        const chainId = "theta-testnet-001"; // Cosmos Hub Testnet
+        await window.keplr.enable(chainId);
+        const offlineSigner = window.keplr.getOfflineSigner(chainId);
+        const accounts = await offlineSigner.getAccounts();
+        const address = accounts[0].address;
+        showToast(`Wallet connected: ${address.slice(0, 10)}...`);
+      } catch (error) {
+        console.error("Error connecting wallet:", error);
+        showToast("Failed to connect wallet.");
+      }
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light-mode");
+      showToast("Theme toggled.");
+    }
+
+    searchInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        search();
+      }
+    });
+
+    fetchIBCChannels();
+    fetchTransactions();
+  </script>
+</body>
+</html>
